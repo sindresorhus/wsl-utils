@@ -19,3 +19,26 @@ export function powerShellPath(): Promise<string>;
 Get the mount point for fixed drives in WSL.
 */
 export function wslDrivesMountPoint(): Promise<string>;
+
+/**
+Convert a WSL Linux path to a Windows-accessible path.
+
+URLs (strings starting with a protocol like `https://`) are returned unchanged.
+
+@param path - The WSL path to convert (e.g., `/home/user/file.html`).
+@returns The Windows-accessible path (e.g., `\\wsl.localhost\Ubuntu\home\user\file.html`) or the original path if conversion fails.
+
+@example
+```
+import {convertWslPathToWindows} from 'wsl-utils';
+
+// Convert a Linux path
+const windowsPath = await convertWslPathToWindows('/home/user/file.html');
+//=> '\\wsl.localhost\Ubuntu\home\user\file.html'
+
+// URLs are not converted
+const url = await convertWslPathToWindows('https://example.com');
+//=> 'https://example.com'
+```
+*/
+export function convertWslPathToWindows(path: string): Promise<string>;

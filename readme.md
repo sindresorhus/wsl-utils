@@ -48,3 +48,29 @@ Returns WSL path if in WSL, otherwise returns Windows path.
 Returns: `Promise<string>`
 
 Get the mount point for fixed drives in WSL.
+
+### convertWslPathToWindows(path)
+
+Returns: `Promise<string>`
+
+Convert a WSL Linux path to a Windows-accessible path.
+
+URLs (strings starting with a protocol like `https://`) are returned unchanged.
+
+```js
+import {convertWslPathToWindows} from 'wsl-utils';
+
+// Convert a Linux path
+const windowsPath = await convertWslPathToWindows('/home/user/file.html');
+//=> '\\wsl.localhost\Ubuntu\home\user\file.html'
+
+// URLs are not converted
+const url = await convertWslPathToWindows('https://example.com');
+//=> 'https://example.com'
+```
+
+#### path
+
+Type: `string`
+
+The WSL path to convert (e.g., `/home/user/file.html`).
