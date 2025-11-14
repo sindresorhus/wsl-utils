@@ -63,6 +63,21 @@ if (await canAccessPowerShell()) {
 }
 ```
 
+### wslDefaultBrowser()
+
+Returns: `Promise<string>`
+
+Get the default browser in WSL.
+
+Returns a promise that resolves to the [ProgID](https://setuserfta.com/guide-to-understanding-progids-and-file-type-associations/) of the default browser (e.g., `'ChromeHTML'`, `'FirefoxURL'`).
+
+```js
+import {wslDefaultBrowser} from 'wsl-utils';
+
+const progId = await wslDefaultBrowser();
+//=> 'ChromeHTML'
+```
+
 ### wslDrivesMountPoint()
 
 Returns: `Promise<string>`

@@ -1,4 +1,5 @@
 import process from 'node:process';
+import {Buffer} from 'node:buffer';
 import {promisify} from 'node:util';
 import childProcess from 'node:child_process';
 import fs, {constants as fsConstants} from 'node:fs/promises';
@@ -74,6 +75,27 @@ export const canAccessPowerShell = async () => {
 	})();
 
 	return canAccessPowerShellPromise;
+};
+
+export const wslDefaultBrowser = async () => {
+	const psPath = await powerShellPath();
+	const rawCommand = String.raw`(Get-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice").ProgId`;
+	const encodedCommand = Buffer.from(rawCommand, 'utf16le').toString('base64');
+
+	const {stdout} = await execFile(
+		psPath,
+		[
+			'-NoProfile',
+			'-NonInteractive',
+			'-ExecutionPolicy',
+			'Bypass',
+			'-EncodedCommand',
+			encodedCommand,
+		],
+		{encoding: 'utf8'},
+	);
+
+	return stdout.trim();
 };
 
 export const convertWslPathToWindows = async path => {

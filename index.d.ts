@@ -38,6 +38,21 @@ if (await canAccessPowerShell()) {
 export function canAccessPowerShell(): Promise<boolean>;
 
 /**
+Get the default browser in WSL.
+
+@returns A promise that resolves to the [ProgID](https://setuserfta.com/guide-to-understanding-progids-and-file-type-associations/) of the default browser (e.g., `'ChromeHTML'`, `'FirefoxURL'`).
+
+@example
+```
+import {wslDefaultBrowser} from 'wsl-utils';
+
+const progId = await wslDefaultBrowser();
+//=> 'ChromeHTML'
+```
+*/
+export function wslDefaultBrowser(): Promise<string>;
+
+/**
 Get the mount point for fixed drives in WSL.
 */
 export function wslDrivesMountPoint(): Promise<string>;
