@@ -58,6 +58,24 @@ export const powerShellPath = async () => {
 	return `${process.env.SYSTEMROOT || process.env.windir || String.raw`C:\Windows`}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`;
 };
 
+// Cache for PowerShell accessibility check
+let canAccessPowerShellPromise;
+
+export const canAccessPowerShell = async () => {
+	canAccessPowerShellPromise ??= (async () => {
+		try {
+			const psPath = await powerShellPath();
+			await fs.access(psPath, fsConstants.X_OK);
+			return true;
+		} catch {
+			// PowerShell is not accessible (either doesn't exist, no execute permission, or other error)
+			return false;
+		}
+	})();
+
+	return canAccessPowerShellPromise;
+};
+
 export const convertWslPathToWindows = async path => {
 	// Don't convert URLs
 	if (/^[a-z]+:\/\//i.test(path)) {
