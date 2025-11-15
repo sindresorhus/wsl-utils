@@ -1,9 +1,8 @@
-import process from 'node:process';
-import {Buffer} from 'node:buffer';
 import {promisify} from 'node:util';
 import childProcess from 'node:child_process';
 import fs, {constants as fsConstants} from 'node:fs/promises';
 import isWsl from 'is-wsl';
+import {powerShellPath as windowsPowerShellPath, executePowerShell} from 'powershell-utils';
 
 const execFile = promisify(childProcess.execFile);
 
@@ -51,13 +50,7 @@ export const powerShellPathFromWsl = async () => {
 	return `${mountPoint}c/Windows/System32/WindowsPowerShell/v1.0/powershell.exe`;
 };
 
-export const powerShellPath = async () => {
-	if (isWsl) {
-		return powerShellPathFromWsl();
-	}
-
-	return `${process.env.SYSTEMROOT || process.env.windir || String.raw`C:\Windows`}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`;
-};
+export const powerShellPath = isWsl ? powerShellPathFromWsl : windowsPowerShellPath;
 
 // Cache for PowerShell accessibility check
 let canAccessPowerShellPromise;
@@ -79,21 +72,9 @@ export const canAccessPowerShell = async () => {
 
 export const wslDefaultBrowser = async () => {
 	const psPath = await powerShellPath();
-	const rawCommand = String.raw`(Get-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice").ProgId`;
-	const encodedCommand = Buffer.from(rawCommand, 'utf16le').toString('base64');
+	const command = String.raw`(Get-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice").ProgId`;
 
-	const {stdout} = await execFile(
-		psPath,
-		[
-			'-NoProfile',
-			'-NonInteractive',
-			'-ExecutionPolicy',
-			'Bypass',
-			'-EncodedCommand',
-			encodedCommand,
-		],
-		{encoding: 'utf8'},
-	);
+	const {stdout} = await executePowerShell(command, {powerShellPath: psPath});
 
 	return stdout.trim();
 };

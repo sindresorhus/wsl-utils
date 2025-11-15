@@ -17,7 +17,7 @@
 	},
 	"sideEffects": false,
 	"engines": {
-		"node": ">=18"
+		"node": ">=20"
 	},
 	"scripts": {
 		"test": "xo && ava && tsc index.d.ts --skipLibCheck"
@@ -36,11 +36,12 @@
 		"utilities"
 	],
 	"dependencies": {
-		"is-wsl": "^3.1.0"
+		"is-wsl": "^3.1.0",
+		"powershell-utils": "^0.1.0"
 	},
 	"devDependencies": {
-		"ava": "^6.3.0",
-		"typescript": "^5.8.3",
-		"xo": "^1.0.0"
+		"ava": "^6.4.1",
+		"typescript": "^5.9.3",
+		"xo": "^1.2.3"
 	}
 }
