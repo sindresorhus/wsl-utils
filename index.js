@@ -94,4 +94,20 @@ export const convertWslPathToWindows = async path => {
 	}
 };
 
+
+export const convertWindowsPathToWsl = async path => {
+	// Don't convert URLs
+	if (/^[a-z]+:\/\//i.test(path)) {
+		return path;
+	}
+
+	try {
+		const {stdout} = await execFile('wslpath', ['-au', path], {encoding: 'utf8'});
+		return stdout.trim();
+	} catch {
+		// If wslpath fails, return the original path
+		return path;
+	}
+};
+
 export {default as isWsl} from 'is-wsl';

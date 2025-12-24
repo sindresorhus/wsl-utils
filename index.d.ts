@@ -79,3 +79,26 @@ const url = await convertWslPathToWindows('https://example.com');
 ```
 */
 export function convertWslPathToWindows(path: string): Promise<string>;
+
+/**
+Convert a Windows path to a WSL-accessible path.
+
+URLs (strings starting with a protocol like `https://`) are returned unchanged.
+
+@param path - The Windows path to convert (e.g., `C:\Users\user\Documents\file.html`).
+@returns The WSL-accessible path (e.g., `/mnt/c/Users/user/Documents/file.html`) or the original path if conversion fails.
+
+@example
+```
+import {convertWindowsPathToWsl} from 'wsl-utils';
+
+// Convert a Windows path
+const wslPath = await convertWindowsPathToWsl('C:\Users\user\Documents\file.html');
+//=> '/mnt/c/Users/user/Documents/file.html'
+
+// URLs are not converted
+const url = await convertWindowsPathToWsl('https://example.com');
+//=> 'https://example.com'
+```
+*/
+export function convertWindowsPathToWsl(path: string): Promise<string>;
