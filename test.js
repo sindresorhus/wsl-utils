@@ -1,9 +1,22 @@
 import process from 'node:process';
 import test from 'ava';
-import {isWsl, canAccessPowerShell, wslDefaultBrowser} from './index.js';
+import {
+	isWsl,
+	canAccessPowerShell,
+	wslDefaultBrowser,
+	wslDrivesMountPoint,
+} from './index.js';
 
 test('isWsl', t => {
 	t.false(isWsl);
+});
+
+test('wslDrivesMountPoint', async t => {
+	const result = await wslDrivesMountPoint();
+	t.is(typeof result, 'string');
+	t.true(result.endsWith('/'));
+	t.false(result.includes('"'));
+	t.false(result.includes('\''));
 });
 
 test('canAccessPowerShell', async t => {

@@ -39,6 +39,10 @@ export const wslDrivesMountPoint = (() => {
 		}
 
 		mountPoint = configMountPoint.groups.mountPoint.trim();
+
+		// Strip surrounding quotes
+		mountPoint = mountPoint.replaceAll(/^["']|["']$/g, '');
+
 		mountPoint = mountPoint.endsWith('/') ? mountPoint : `${mountPoint}/`;
 
 		return mountPoint;
