@@ -3,6 +3,7 @@ import childProcess from 'node:child_process';
 import fs, {constants as fsConstants} from 'node:fs/promises';
 import isWsl from 'is-wsl';
 import {powerShellPath as windowsPowerShellPath, executePowerShell} from 'powershell-utils';
+import {parseMountPointFromConfig} from './utilities.js';
 
 const execFile = promisify(childProcess.execFile);
 
@@ -32,17 +33,13 @@ export const wslDrivesMountPoint = (() => {
 		}
 
 		const configContent = await fs.readFile(configFilePath, {encoding: 'utf8'});
-		const configMountPoint = /(?<!#.*)root\s*=\s*(?<mountPoint>.*)/g.exec(configContent);
+		const parsedMountPoint = parseMountPointFromConfig(configContent);
 
-		if (!configMountPoint) {
+		if (parsedMountPoint === undefined) {
 			return defaultMountPoint;
 		}
 
-		mountPoint = configMountPoint.groups.mountPoint.trim();
-
-		// Strip surrounding quotes
-		mountPoint = mountPoint.replaceAll(/^["']|["']$/g, '');
-
+		mountPoint = parsedMountPoint;
 		mountPoint = mountPoint.endsWith('/') ? mountPoint : `${mountPoint}/`;
 
 		return mountPoint;

@@ -24,7 +24,8 @@
 	},
 	"files": [
 		"index.js",
-		"index.d.ts"
+		"index.d.ts",
+		"utilities.js"
 	],
 	"keywords": [
 		"wsl",

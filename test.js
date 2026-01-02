@@ -1,5 +1,6 @@
 import process from 'node:process';
 import test from 'ava';
+import {parseMountPointFromConfig} from './utilities.js';
 import {
 	isWsl,
 	canAccessPowerShell,
@@ -17,6 +18,30 @@ test('wslDrivesMountPoint', async t => {
 	t.true(result.endsWith('/'));
 	t.false(result.includes('"'));
 	t.false(result.includes('\''));
+});
+
+test('parseMountPointFromConfig', t => {
+	// Basic values
+	t.is(parseMountPointFromConfig('[automount]\nroot = /mnt/'), '/mnt/');
+	t.is(parseMountPointFromConfig('[automount]\nroot=/'), '/');
+	t.is(parseMountPointFromConfig('root = /custom/path'), '/custom/path');
+
+	// Quoted values
+	t.is(parseMountPointFromConfig('root = "/"'), '/');
+	t.is(parseMountPointFromConfig('root = \'/\''), '/');
+	t.is(parseMountPointFromConfig('root = "/mnt/"'), '/mnt/');
+
+	// Inline comments
+	t.is(parseMountPointFromConfig('root = /mnt/ # comment'), '/mnt/');
+	t.is(parseMountPointFromConfig('root = "/" # comment'), '/');
+	t.is(parseMountPointFromConfig('root = \'/\' # comment'), '/');
+
+	// Full-line comments (should be ignored)
+	t.is(parseMountPointFromConfig('# root = /foo/\nroot = /bar/'), '/bar/');
+
+	// No match
+	t.is(parseMountPointFromConfig('[automount]'), undefined);
+	t.is(parseMountPointFromConfig('# root = /foo/'), undefined);
 });
 
 test('canAccessPowerShell', async t => {
