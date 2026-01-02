@@ -1,6 +1,6 @@
 {
 	"name": "wsl-utils",
-	"version": "0.3.0",
+	"version": "0.3.1",
 	"description": "Utilities for working with Windows Subsystem for Linux (WSL)",
 	"license": "MIT",
 	"repository": "sindresorhus/wsl-utils",
