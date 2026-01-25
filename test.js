@@ -6,6 +6,7 @@ import {
 	canAccessPowerShell,
 	wslDefaultBrowser,
 	wslDrivesMountPoint,
+	isUncPath,
 } from './index.js';
 
 test('isWsl', t => {
@@ -64,4 +65,13 @@ test('wslDefaultBrowser', async t => {
 	t.is(typeof progId, 'string');
 	// ProgID should be non-empty on WSL
 	t.true(progId.length > 0);
+});
+
+test('isUncPath', t => {
+	t.true(isUncPath(String.raw`\\wsl.localhost\Ubuntu`));
+	t.true(isUncPath(String.raw`\\wsl$\Ubuntu`));
+	t.true(isUncPath(String.raw`\\server\share`));
+	t.false(isUncPath(String.raw`C:\Users\file.txt`));
+	t.false(isUncPath('/home/user'));
+	t.false(isUncPath(''));
 });

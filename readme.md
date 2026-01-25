@@ -109,3 +109,74 @@ const url = await convertWslPathToWindows('https://example.com');
 Type: `string`
 
 The WSL path to convert (e.g., `/home/user/file.html`).
+
+### convertWslPathToWindows(paths)
+
+Returns: `Promise<string[]>`
+
+Convert multiple WSL Linux paths to Windows-accessible paths.
+
+```js
+import {convertWslPathToWindows} from 'wsl-utils';
+
+const windowsPaths = await convertWslPathToWindows([
+	'/home/user/file.html',
+	'/mnt/c/Users/file.txt',
+	'https://example.com'
+]);
+//=> ['\\wsl.localhost\Ubuntu\home\user\file.html', 'C:\Users\file.txt', 'https://example.com']
+```
+
+#### paths
+
+Type: `string[]`
+
+The WSL paths to convert.
+
+### isUncPath(path)
+
+Returns: `boolean`
+
+Check if a Windows path is a UNC path (e.g., `\\wsl.localhost\...` or `\\wsl$\...`).
+
+UNC paths indicate the file resides on the WSL Linux filesystem rather than a Windows drive.
+
+```js
+import {isUncPath} from 'wsl-utils';
+
+isUncPath('\\\\wsl.localhost\\Ubuntu\\home\\user');
+//=> true
+
+isUncPath('C:\\Users\\file.txt');
+//=> false
+```
+
+#### path
+
+Type: `string`
+
+The Windows path to check.
+
+### isPathOnWindowsFilesystem(path)
+
+Returns: `Promise<boolean>`
+
+Check if a WSL path maps to the Windows filesystem.
+
+This converts the path and checks if it's on a Windows drive (e.g., `/mnt/c/...` → `C:\...`) rather than the Linux filesystem (e.g., `/home/...` → `\\wsl$\...`).
+
+```js
+import {isPathOnWindowsFilesystem} from 'wsl-utils';
+
+await isPathOnWindowsFilesystem('/mnt/c/Users/file.txt');
+//=> true
+
+await isPathOnWindowsFilesystem('/home/user/file.txt');
+//=> false
+```
+
+#### path
+
+Type: `string`
+
+The WSL path to check.

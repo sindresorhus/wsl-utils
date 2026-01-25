@@ -80,19 +80,47 @@ export const wslDefaultBrowser = async () => {
 	return stdout.trim();
 };
 
-export const convertWslPathToWindows = async path => {
-	// Don't convert URLs
-	if (/^[a-z]+:\/\//i.test(path)) {
-		return path;
+const isUrl = path => /^[a-z]+:\/\//i.test(path);
+
+export const convertWslPathToWindows = async paths => {
+	const isBatch = Array.isArray(paths);
+	const pathArray = isBatch ? paths : [paths];
+
+	// Find indices of non-URL paths that need conversion
+	const indicesToConvert = [];
+	const pathsToConvert = [];
+
+	for (const [index, path] of pathArray.entries()) {
+		if (!isUrl(path)) {
+			indicesToConvert.push(index);
+			pathsToConvert.push(path);
+		}
 	}
 
-	try {
-		const {stdout} = await execFile('wslpath', ['-aw', path], {encoding: 'utf8'});
-		return stdout.trim();
-	} catch {
-		// If wslpath fails, return the original path
-		return path;
+	// Start with original paths (URLs stay as-is)
+	const results = [...pathArray];
+
+	if (pathsToConvert.length > 0) {
+		try {
+			const {stdout} = await execFile('wslpath', ['-aw', ...pathsToConvert], {encoding: 'utf8'});
+			const convertedPaths = stdout.split(/\r?\n/).filter(Boolean);
+
+			for (const [index, originalIndex] of indicesToConvert.entries()) {
+				results[originalIndex] = convertedPaths[index] ?? pathArray[originalIndex];
+			}
+		} catch {
+			// If wslpath fails, keep original paths
+		}
 	}
+
+	return isBatch ? results : results[0];
+};
+
+export const isUncPath = path => /^\\\\/u.test(path);
+
+export const isPathOnWindowsFilesystem = async path => {
+	const windowsPath = await convertWslPathToWindows(path);
+	return !isUncPath(windowsPath);
 };
 
 export {default as isWsl} from 'is-wsl';
