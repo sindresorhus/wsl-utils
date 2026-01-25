@@ -123,4 +123,18 @@ export const isPathOnWindowsFilesystem = async path => {
 	return !isUncPath(windowsPath);
 };
 
+export const convertWindowsPathToWsl = async paths => {
+	const isBatch = Array.isArray(paths);
+	const pathArray = isBatch ? paths : [paths];
+
+	try {
+		const {stdout} = await execFile('wslpath', ['-u', ...pathArray], {encoding: 'utf8'});
+		const convertedPaths = stdout.split(/\r?\n/).filter(Boolean);
+		const results = pathArray.map((original, index) => convertedPaths[index] ?? original);
+		return isBatch ? results : results[0];
+	} catch {
+		return isBatch ? pathArray : pathArray[0];
+	}
+};
+
 export {default as isWsl} from 'is-wsl';

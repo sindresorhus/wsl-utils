@@ -143,3 +143,38 @@ await isPathOnWindowsFilesystem('/home/user/file.txt');
 ```
 */
 export function isPathOnWindowsFilesystem(path: string): Promise<boolean>;
+
+/**
+Convert a Windows path to a WSL Linux path.
+
+@param path - The Windows path to convert (e.g., `C:\Users\file.txt`).
+@returns The WSL path (e.g., `/mnt/c/Users/file.txt`) or the original path if conversion fails.
+
+@example
+```
+import {convertWindowsPathToWsl} from 'wsl-utils';
+
+const wslPath = await convertWindowsPathToWsl('C:\\Users\\file.txt');
+//=> '/mnt/c/Users/file.txt'
+```
+*/
+export function convertWindowsPathToWsl(path: string): Promise<string>;
+
+/**
+Convert multiple Windows paths to WSL Linux paths.
+
+@param paths - The Windows paths to convert.
+@returns The WSL paths in the same order, or the original paths if conversion fails.
+
+@example
+```
+import {convertWindowsPathToWsl} from 'wsl-utils';
+
+const wslPaths = await convertWindowsPathToWsl([
+	'C:\\Users\\file.txt',
+	'D:\\Projects\\app'
+]);
+//=> ['/mnt/c/Users/file.txt', '/mnt/d/Projects/app']
+```
+*/
+export function convertWindowsPathToWsl(paths: string[]): Promise<string[]>;

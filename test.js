@@ -7,6 +7,7 @@ import {
 	wslDefaultBrowser,
 	wslDrivesMountPoint,
 	isUncPath,
+	convertWindowsPathToWsl,
 } from './index.js';
 
 test('isWsl', t => {
@@ -74,4 +75,17 @@ test('isUncPath', t => {
 	t.false(isUncPath(String.raw`C:\Users\file.txt`));
 	t.false(isUncPath('/home/user'));
 	t.false(isUncPath(''));
+});
+
+test('convertWindowsPathToWsl', async t => {
+	// On non-WSL systems, wslpath fails and returns original path
+	const singlePath = String.raw`C:\Users\file.txt`;
+	const result = await convertWindowsPathToWsl(singlePath);
+	t.is(typeof result, 'string');
+
+	// Array input should return array
+	const paths = [String.raw`C:\Users\file.txt`, String.raw`D:\Projects`];
+	const results = await convertWindowsPathToWsl(paths);
+	t.true(Array.isArray(results));
+	t.is(results.length, 2);
 });
