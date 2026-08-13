@@ -1,3 +1,4 @@
+import path from 'node:path';
 import {promisify} from 'node:util';
 import childProcess from 'node:child_process';
 import fs, {constants as fsConstants} from 'node:fs/promises';
@@ -75,7 +76,11 @@ export const wslDefaultBrowser = async () => {
 	const psPath = await powerShellPath();
 	const command = String.raw`(Get-ItemProperty -Path "HKCU:\Software\Microsoft\Windows\Shell\Associations\UrlAssociations\http\UserChoice").ProgId`;
 
-	const {stdout} = await executePowerShell(command, {powerShellPath: psPath});
+	// The spawned Windows process inherits the Linux working directory, which WSL exposes to Windows as a `\\wsl.localhost\…` UNC path served by the distro's default user, so a directory that user cannot traverse makes the launch fail. PowerShell's own directory is on the Windows drive, so it always resolves to a plain `C:\…` path.
+	const {stdout} = await executePowerShell(command, {
+		powerShellPath: psPath,
+		cwd: path.dirname(psPath),
+	});
 
 	return stdout.trim();
 };
