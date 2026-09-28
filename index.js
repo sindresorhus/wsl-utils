@@ -1,4 +1,4 @@
-import path from 'node:path';
+import nodePath from 'node:path';
 import {promisify} from 'node:util';
 import childProcess from 'node:child_process';
 import fs, {constants as fsConstants} from 'node:fs/promises';
@@ -79,13 +79,13 @@ export const wslDefaultBrowser = async () => {
 	// The spawned Windows process inherits the Linux working directory, which WSL exposes to Windows as a `\\wsl.localhost\…` UNC path served by the distro's default user, so a directory that user cannot traverse makes the launch fail. PowerShell's own directory is on the Windows drive, so it always resolves to a plain `C:\…` path.
 	const {stdout} = await executePowerShell(command, {
 		powerShellPath: psPath,
-		cwd: path.dirname(psPath),
+		cwd: nodePath.dirname(psPath),
 	});
 
 	return stdout.trim();
 };
 
-const isUrl = path => /^[a-z]+:\/\//i.test(path);
+const isUrl = path => /^[a-z]+:\/\//iv.test(path);
 
 // `wslpath` only accepts a single path, so each path needs its own call.
 const convertPath = async (flag, path) => {
@@ -94,7 +94,7 @@ const convertPath = async (flag, path) => {
 
 	try {
 		const {stdout} = await execFile('wslpath', wslpathArguments, {encoding: 'utf8'});
-		return stdout.replace(/\r?\n$/, '') || path;
+		return stdout.replace(/\r?\n$/v, '') || path;
 	} catch {
 		// If wslpath fails, keep original path
 		return path;
@@ -109,7 +109,7 @@ export const convertWslPathToWindows = async paths => {
 	return isBatch ? results : results[0];
 };
 
-export const isUncPath = path => /^\\\\/u.test(path);
+export const isUncPath = path => /^\\\\/v.test(path);
 
 export const isPathOnWindowsFilesystem = async path => {
 	const windowsPath = await convertWslPathToWindows(path);

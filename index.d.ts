@@ -35,6 +35,7 @@ if (await canAccessPowerShell()) {
 }
 ```
 */
+// eslint-disable-next-line unicorn/consistent-boolean-name -- Renaming a published export to satisfy the linter is not acceptable; it returns a promise, not a bare boolean.
 export function canAccessPowerShell(): Promise<boolean>;
 
 /**
@@ -85,7 +86,7 @@ Convert multiple WSL Linux paths to Windows-accessible paths.
 
 URLs (strings starting with a protocol like `https://`) are returned unchanged.
 
-@param paths - The WSL paths to convert.
+@param paths - The WSL paths to convert (e.g., `['/home/user/file.html', '/mnt/c/Users/file.txt']`).
 @returns The Windows-accessible paths in the same order, or the original paths if conversion fails.
 
 @example
@@ -142,6 +143,7 @@ await isPathOnWindowsFilesystem('/home/user/file.txt');
 //=> false
 ```
 */
+// eslint-disable-next-line unicorn/consistent-boolean-name -- Renaming a published export to satisfy the linter is not acceptable; it returns a promise, not a bare boolean.
 export function isPathOnWindowsFilesystem(path: string): Promise<boolean>;
 
 /**
@@ -163,7 +165,7 @@ export function convertWindowsPathToWsl(path: string): Promise<string>;
 /**
 Convert multiple Windows paths to WSL Linux paths.
 
-@param paths - The Windows paths to convert.
+@param paths - The Windows paths to convert (e.g., `['C:\Users\file.txt', 'D:\Projects\app']`).
 @returns The WSL paths in the same order, or the original paths if conversion fails.
 
 @example

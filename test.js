@@ -1,8 +1,10 @@
+/* eslint-disable node-test/no-conditional-assertion, node-test/prefer-test-context-assert -- Each platform branch below is the environment the test is meant to run on, so the guarded assertion is exactly what should be checked there. `t.assert` is not portable across the supported Node.js range, so the imported `assert` is the one that must be used. */
 import process from 'node:process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import test from 'ava';
+import test from 'node:test';
+import assert from 'node:assert/strict';
 import {parseMountPointFromConfig} from './utilities.js';
 import {
 	isWsl,
@@ -14,87 +16,87 @@ import {
 	convertWindowsPathToWsl,
 } from './index.js';
 
-test('isWsl', t => {
-	t.false(isWsl);
+test('isWsl', () => {
+	assert.equal(isWsl, false);
 });
 
-test('wslDrivesMountPoint', async t => {
+test('wslDrivesMountPoint', async () => {
 	const result = await wslDrivesMountPoint();
-	t.is(typeof result, 'string');
-	t.true(result.endsWith('/'));
-	t.false(result.includes('"'));
-	t.false(result.includes('\''));
+	assert.equal(typeof result, 'string');
+	assert.equal(result.endsWith('/'), true);
+	assert.equal(result.includes('"'), false);
+	assert.equal(result.includes('\''), false);
 });
 
-test('parseMountPointFromConfig', t => {
+test('parseMountPointFromConfig', () => {
 	// Basic values
-	t.is(parseMountPointFromConfig('[automount]\nroot = /mnt/'), '/mnt/');
-	t.is(parseMountPointFromConfig('[automount]\nroot=/'), '/');
-	t.is(parseMountPointFromConfig('root = /custom/path'), '/custom/path');
+	assert.equal(parseMountPointFromConfig('[automount]\nroot = /mnt/'), '/mnt/');
+	assert.equal(parseMountPointFromConfig('[automount]\nroot=/'), '/');
+	assert.equal(parseMountPointFromConfig('root = /custom/path'), '/custom/path');
 
 	// Quoted values
-	t.is(parseMountPointFromConfig('root = "/"'), '/');
-	t.is(parseMountPointFromConfig('root = \'/\''), '/');
-	t.is(parseMountPointFromConfig('root = "/mnt/"'), '/mnt/');
+	assert.equal(parseMountPointFromConfig('root = "/"'), '/');
+	assert.equal(parseMountPointFromConfig('root = \'/\''), '/');
+	assert.equal(parseMountPointFromConfig('root = "/mnt/"'), '/mnt/');
 
 	// Inline comments
-	t.is(parseMountPointFromConfig('root = /mnt/ # comment'), '/mnt/');
-	t.is(parseMountPointFromConfig('root = "/" # comment'), '/');
-	t.is(parseMountPointFromConfig('root = \'/\' # comment'), '/');
+	assert.equal(parseMountPointFromConfig('root = /mnt/ # comment'), '/mnt/');
+	assert.equal(parseMountPointFromConfig('root = "/" # comment'), '/');
+	assert.equal(parseMountPointFromConfig('root = \'/\' # comment'), '/');
 
 	// Full-line comments (should be ignored)
-	t.is(parseMountPointFromConfig('# root = /foo/\nroot = /bar/'), '/bar/');
+	assert.equal(parseMountPointFromConfig('# root = /foo/\nroot = /bar/'), '/bar/');
 
 	// No match
-	t.is(parseMountPointFromConfig('[automount]'), undefined);
-	t.is(parseMountPointFromConfig('# root = /foo/'), undefined);
+	assert.equal(parseMountPointFromConfig('[automount]'), undefined);
+	assert.equal(parseMountPointFromConfig('# root = /foo/'), undefined);
 });
 
-test('canAccessPowerShell', async t => {
+test('canAccessPowerShell', async () => {
 	const result = await canAccessPowerShell();
-	t.is(typeof result, 'boolean');
+	assert.equal(typeof result, 'boolean');
 	// On non-Windows systems, this should return false
-	if (process.platform !== 'win32' && !isWsl) {
-		t.false(result);
+	if (!isWsl && process.platform !== 'win32') {
+		assert.equal(result, false);
 	}
 });
 
 test('wslDefaultBrowser', async t => {
 	// Only test on WSL
 	if (!isWsl) {
-		t.pass('Skipping test on non-WSL system');
+		t.skip('Skipping test on non-WSL system');
 		return;
 	}
 
 	const progId = await wslDefaultBrowser();
-	t.is(typeof progId, 'string');
+	assert.equal(typeof progId, 'string');
 	// ProgID should be non-empty on WSL
-	t.true(progId.length > 0);
+	assert.equal(progId.length > 0, true);
 });
 
-test('isUncPath', t => {
-	t.true(isUncPath(String.raw`\\wsl.localhost\Ubuntu`));
-	t.true(isUncPath(String.raw`\\wsl$\Ubuntu`));
-	t.true(isUncPath(String.raw`\\server\share`));
-	t.false(isUncPath(String.raw`C:\Users\file.txt`));
-	t.false(isUncPath('/home/user'));
-	t.false(isUncPath(''));
+test('isUncPath', () => {
+	assert.equal(isUncPath(String.raw`\\wsl.localhost\Ubuntu`), true);
+	assert.equal(isUncPath(String.raw`\\wsl$\Ubuntu`), true);
+	assert.equal(isUncPath(String.raw`\\server\share`), true);
+	assert.equal(isUncPath(String.raw`C:\Users\file.txt`), false);
+	assert.equal(isUncPath('/home/user'), false);
+	assert.equal(isUncPath(''), false);
 });
 
-test('convertWindowsPathToWsl', async t => {
+test('convertWindowsPathToWsl', async () => {
 	// On non-WSL systems, wslpath fails and returns original path
 	const singlePath = String.raw`C:\Users\file.txt`;
 	const result = await convertWindowsPathToWsl(singlePath);
-	t.is(typeof result, 'string');
+	assert.equal(typeof result, 'string');
 
 	// Array input should return array
 	const paths = [String.raw`C:\Users\file.txt`, String.raw`D:\Projects`];
 	const results = await convertWindowsPathToWsl(paths);
-	t.true(Array.isArray(results));
-	t.is(results.length, 2);
+	assert.equal(Array.isArray(results), true);
+	assert.equal(results.length, 2);
 });
 
-// Put a fake `wslpath` on `PATH` that, like the real one, only accepts a single path and treats a leading `-` as an option unless it comes after `--`. Tests that use it must be serial, as `PATH` is global.
+// Put a fake `wslpath` on `PATH` that, like the real one, only accepts a single path and treats a leading `-` as an option unless it comes after `--`.
 const useFakeWslpath = async t => {
 	const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'wsl-utils-'));
 
@@ -118,25 +120,25 @@ const useFakeWslpath = async t => {
 	const originalPath = process.env.PATH;
 	process.env.PATH = `${directory}${path.delimiter}${originalPath}`;
 
-	t.teardown(async () => {
+	t.after(async () => {
 		process.env.PATH = originalPath;
 		await fs.rm(directory, {recursive: true, force: true});
 	});
 };
 
-test.serial('convertWslPathToWindows converts each path in an array', async t => {
+test('convertWslPathToWindows converts each path in an array', async t => {
 	await useFakeWslpath(t);
-	t.is(await convertWslPathToWindows('/home'), '-aw:/home');
-	t.deepEqual(await convertWslPathToWindows(['/home', 'https://example.com', '/tmp']), ['-aw:/home', 'https://example.com', '-aw:/tmp']);
+	assert.equal(await convertWslPathToWindows('/home'), '-aw:/home');
+	assert.deepEqual(await convertWslPathToWindows(['/home', 'https://example.com', '/tmp']), ['-aw:/home', 'https://example.com', '-aw:/tmp']);
 });
 
-test.serial('convertWslPathToWindows converts a path starting with a dash', async t => {
+test('convertWslPathToWindows converts a path starting with a dash', async t => {
 	await useFakeWslpath(t);
-	t.is(await convertWslPathToWindows('-foo'), '-aw:-foo');
+	assert.equal(await convertWslPathToWindows('-foo'), '-aw:-foo');
 });
 
-test.serial('convertWindowsPathToWsl converts each path in an array', async t => {
+test('convertWindowsPathToWsl converts each path in an array', async t => {
 	await useFakeWslpath(t);
-	t.is(await convertWindowsPathToWsl(String.raw`C:\Windows`), String.raw`-u:C:\Windows`);
-	t.deepEqual(await convertWindowsPathToWsl([String.raw`C:\Windows`, String.raw`C:\Users`]), [String.raw`-u:C:\Windows`, String.raw`-u:C:\Users`]);
+	assert.equal(await convertWindowsPathToWsl(String.raw`C:\Windows`), String.raw`-u:C:\Windows`);
+	assert.deepEqual(await convertWindowsPathToWsl([String.raw`C:\Windows`, String.raw`C:\Users`]), [String.raw`-u:C:\Windows`, String.raw`-u:C:\Users`]);
 });

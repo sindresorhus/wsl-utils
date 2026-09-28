@@ -5,11 +5,7 @@
 	"license": "MIT",
 	"repository": "sindresorhus/wsl-utils",
 	"funding": "https://github.com/sponsors/sindresorhus",
-	"author": {
-		"name": "Sindre Sorhus",
-		"email": "sindresorhus@gmail.com",
-		"url": "https://sindresorhus.com"
-	},
+	"author": "Sindre Sorhus <sindresorhus@gmail.com> (https://sindresorhus.com)",
 	"type": "module",
 	"exports": {
 		"types": "./index.d.ts",
@@ -17,10 +13,10 @@
 	},
 	"sideEffects": false,
 	"engines": {
-		"node": ">=20"
+		"node": ">=22"
 	},
 	"scripts": {
-		"test": "xo && ava && tsc index.d.ts --skipLibCheck"
+		"test": "xo && node --test && tsc index.d.ts --skipLibCheck"
 	},
 	"files": [
 		"index.js",
@@ -37,12 +33,11 @@
 		"utilities"
 	],
 	"dependencies": {
-		"is-wsl": "^3.1.0",
-		"powershell-utils": "^0.2.0"
+		"is-wsl": "^3.1.1",
+		"powershell-utils": "^0.2.1"
 	},
 	"devDependencies": {
-		"ava": "^6.4.1",
-		"typescript": "^5.9.3",
-		"xo": "^1.2.3"
+		"typescript": "^6.0.3",
+		"xo": "^5.0.1"
 	}
 }
