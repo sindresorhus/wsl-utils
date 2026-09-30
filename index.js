@@ -89,8 +89,11 @@ const isUrl = path => /^[a-z]+:\/\//i.test(path);
 
 // `wslpath` only accepts a single path, so each path needs its own call.
 const convertPath = async (flag, path) => {
+	// `--` stops `wslpath` from reading a leading `-` as an option. Only pass it when needed, as it is only confirmed for WSL 2.5 and later.
+	const wslpathArguments = path.startsWith('-') ? [flag, '--', path] : [flag, path];
+
 	try {
-		const {stdout} = await execFile('wslpath', [flag, path], {encoding: 'utf8'});
+		const {stdout} = await execFile('wslpath', wslpathArguments, {encoding: 'utf8'});
 		return stdout.replace(/\r?\n$/, '') || path;
 	} catch {
 		// If wslpath fails, keep original path

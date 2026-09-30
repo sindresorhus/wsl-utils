@@ -94,10 +94,26 @@ test('convertWindowsPathToWsl', async t => {
 	t.is(results.length, 2);
 });
 
-// Put a fake `wslpath` on `PATH` that, like the real one, only accepts a single path. Tests that use it must be serial, as `PATH` is global.
+// Put a fake `wslpath` on `PATH` that, like the real one, only accepts a single path and treats a leading `-` as an option unless it comes after `--`. Tests that use it must be serial, as `PATH` is global.
 const useFakeWslpath = async t => {
 	const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'wsl-utils-'));
-	await fs.writeFile(path.join(directory, 'wslpath'), '#!/bin/sh\nif [ "$#" -ne 2 ]; then echo "Invalid command line argument: $3" >&2; exit 1; fi\nprintf \'%s:%s\\n\' "$1" "$2"\n', {mode: 0o755});
+
+	const script = [
+		'#!/bin/sh',
+		'flag="$1"',
+		'shift',
+		'case "$1" in',
+		'\t--) shift ;;',
+		'\t-*) echo "Invalid command line argument: $1" >&2; exit 1 ;;',
+		'esac',
+		'if [ "$#" -ne 1 ]; then',
+		'\techo "Invalid command line argument: $2" >&2',
+		'\texit 1',
+		'fi',
+		String.raw`printf '%s:%s\n' "$flag" "$1"`,
+	].join('\n');
+
+	await fs.writeFile(path.join(directory, 'wslpath'), `${script}\n`, {mode: 0o755});
 
 	const originalPath = process.env.PATH;
 	process.env.PATH = `${directory}${path.delimiter}${originalPath}`;
@@ -112,6 +128,11 @@ test.serial('convertWslPathToWindows converts each path in an array', async t =>
 	await useFakeWslpath(t);
 	t.is(await convertWslPathToWindows('/home'), '-aw:/home');
 	t.deepEqual(await convertWslPathToWindows(['/home', 'https://example.com', '/tmp']), ['-aw:/home', 'https://example.com', '-aw:/tmp']);
+});
+
+test.serial('convertWslPathToWindows converts a path starting with a dash', async t => {
+	await useFakeWslpath(t);
+	t.is(await convertWslPathToWindows('-foo'), '-aw:-foo');
 });
 
 test.serial('convertWindowsPathToWsl converts each path in an array', async t => {
