@@ -1,4 +1,7 @@
 import process from 'node:process';
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 import test from 'ava';
 import {parseMountPointFromConfig} from './utilities.js';
 import {
@@ -7,6 +10,7 @@ import {
 	wslDefaultBrowser,
 	wslDrivesMountPoint,
 	isUncPath,
+	convertWslPathToWindows,
 	convertWindowsPathToWsl,
 } from './index.js';
 
@@ -88,4 +92,30 @@ test('convertWindowsPathToWsl', async t => {
 	const results = await convertWindowsPathToWsl(paths);
 	t.true(Array.isArray(results));
 	t.is(results.length, 2);
+});
+
+// Put a fake `wslpath` on `PATH` that, like the real one, only accepts a single path. Tests that use it must be serial, as `PATH` is global.
+const useFakeWslpath = async t => {
+	const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'wsl-utils-'));
+	await fs.writeFile(path.join(directory, 'wslpath'), '#!/bin/sh\nif [ "$#" -ne 2 ]; then echo "Invalid command line argument: $3" >&2; exit 1; fi\nprintf \'%s:%s\\n\' "$1" "$2"\n', {mode: 0o755});
+
+	const originalPath = process.env.PATH;
+	process.env.PATH = `${directory}${path.delimiter}${originalPath}`;
+
+	t.teardown(async () => {
+		process.env.PATH = originalPath;
+		await fs.rm(directory, {recursive: true, force: true});
+	});
+};
+
+test.serial('convertWslPathToWindows converts each path in an array', async t => {
+	await useFakeWslpath(t);
+	t.is(await convertWslPathToWindows('/home'), '-aw:/home');
+	t.deepEqual(await convertWslPathToWindows(['/home', 'https://example.com', '/tmp']), ['-aw:/home', 'https://example.com', '-aw:/tmp']);
+});
+
+test.serial('convertWindowsPathToWsl converts each path in an array', async t => {
+	await useFakeWslpath(t);
+	t.is(await convertWindowsPathToWsl(String.raw`C:\Windows`), String.raw`-u:C:\Windows`);
+	t.deepEqual(await convertWindowsPathToWsl([String.raw`C:\Windows`, String.raw`C:\Users`]), [String.raw`-u:C:\Windows`, String.raw`-u:C:\Users`]);
 });

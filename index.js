@@ -87,37 +87,22 @@ export const wslDefaultBrowser = async () => {
 
 const isUrl = path => /^[a-z]+:\/\//i.test(path);
 
+// `wslpath` only accepts a single path, so each path needs its own call.
+const convertPath = async (flag, path) => {
+	try {
+		const {stdout} = await execFile('wslpath', [flag, path], {encoding: 'utf8'});
+		return stdout.replace(/\r?\n$/, '') || path;
+	} catch {
+		// If wslpath fails, keep original path
+		return path;
+	}
+};
+
 export const convertWslPathToWindows = async paths => {
 	const isBatch = Array.isArray(paths);
 	const pathArray = isBatch ? paths : [paths];
-
-	// Find indices of non-URL paths that need conversion
-	const indicesToConvert = [];
-	const pathsToConvert = [];
-
-	for (const [index, path] of pathArray.entries()) {
-		if (!isUrl(path)) {
-			indicesToConvert.push(index);
-			pathsToConvert.push(path);
-		}
-	}
-
-	// Start with original paths (URLs stay as-is)
-	const results = [...pathArray];
-
-	if (pathsToConvert.length > 0) {
-		try {
-			const {stdout} = await execFile('wslpath', ['-aw', ...pathsToConvert], {encoding: 'utf8'});
-			const convertedPaths = stdout.split(/\r?\n/).filter(Boolean);
-
-			for (const [index, originalIndex] of indicesToConvert.entries()) {
-				results[originalIndex] = convertedPaths[index] ?? pathArray[originalIndex];
-			}
-		} catch {
-			// If wslpath fails, keep original paths
-		}
-	}
-
+	// URLs stay as-is
+	const results = await Promise.all(pathArray.map(path => isUrl(path) ? path : convertPath('-aw', path)));
 	return isBatch ? results : results[0];
 };
 
@@ -131,15 +116,8 @@ export const isPathOnWindowsFilesystem = async path => {
 export const convertWindowsPathToWsl = async paths => {
 	const isBatch = Array.isArray(paths);
 	const pathArray = isBatch ? paths : [paths];
-
-	try {
-		const {stdout} = await execFile('wslpath', ['-u', ...pathArray], {encoding: 'utf8'});
-		const convertedPaths = stdout.split(/\r?\n/).filter(Boolean);
-		const results = pathArray.map((original, index) => convertedPaths[index] ?? original);
-		return isBatch ? results : results[0];
-	} catch {
-		return isBatch ? pathArray : pathArray[0];
-	}
+	const results = await Promise.all(pathArray.map(path => convertPath('-u', path)));
+	return isBatch ? results : results[0];
 };
 
 export {default as isWsl} from 'is-wsl';
